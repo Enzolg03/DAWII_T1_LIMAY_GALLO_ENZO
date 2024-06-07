@@ -1,6 +1,7 @@
 package pe.edu.cibertec.DAWII_T1_LIMAY_GALLO_ENZO.controller;
 
 import lombok.AllArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import pe.edu.cibertec.DAWII_T1_LIMAY_GALLO_ENZO.model.bd.Usuario;
@@ -18,6 +19,10 @@ public class SecurityController {
     @GetMapping("/registro")
     public String frmMantUsuario(){
         return "seguridad/frmregistro";
+    }
+    @GetMapping("/cambiarclave")
+    public String cambiarclave(){
+        return "seguridad/frmcambiarclave";
     }
     @ResponseBody
     @PostMapping("/registrar")
@@ -42,5 +47,33 @@ public class SecurityController {
         }
         return ResultadoResponse.builder().mensaje(mensaje)
                 .respuesta(respuesta).build();
+    }
+    @ResponseBody
+    @PutMapping("/cambiarclave")
+    public ResultadoResponse actualizarClave(@RequestBody Map<String, String> passwordMap, Authentication authentication) {
+        String mensaje = "Contraseña cambiada correctamente";
+        boolean respuesta = true;
+
+        try {
+            String newPassword = passwordMap.get("password");
+            if (!isValidPassword(newPassword)) {
+                throw new IllegalArgumentException("La contraseña no cumple con los requisitos de seguridad");
+            }
+            String nomusuario = authentication.getName();
+
+            Usuario usuario = new Usuario();
+            usuario.setNomusuario(nomusuario);
+            usuario.setPassword(newPassword);
+            usuarioService.actualizarClave(usuario);
+        } catch (Exception ex) {
+            mensaje = "Contraseña no cambiada, error: " + ex.getMessage();
+            respuesta = false;
+        }
+        return ResultadoResponse.builder().mensaje(mensaje).respuesta(respuesta).build();
+    }
+
+    private boolean isValidPassword(String password) {
+        String regex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@#$%^&+=!])(?=\\S+$).{8,}$";
+        return password.matches(regex);
     }
 }

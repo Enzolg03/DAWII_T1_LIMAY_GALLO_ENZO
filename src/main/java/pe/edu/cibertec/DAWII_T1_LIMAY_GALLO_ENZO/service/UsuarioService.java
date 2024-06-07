@@ -28,6 +28,9 @@ public class UsuarioService implements IUsuarioService{
 
     @Override
     public void actualizarClave(Usuario usuario) {
+        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        String encryptedPassword = passwordEncoder.encode(usuario.getPassword());
+        usuarioRepository.actualizarClave(encryptedPassword, usuario.getNomusuario());
     }
 
     @Override
